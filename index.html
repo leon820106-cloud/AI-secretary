@@ -340,6 +340,9 @@
     gap:7px;
   }
   .date-value{
+    align-self:flex-start;
+    width:fit-content;
+    text-align:left;
     font-weight:800;
     font-size:14.5px;
     color:var(--text);
@@ -374,6 +377,12 @@
   .date-status-badge.soon{background:#fff8d9;color:#806600}
   .date-status-badge.overdue{background:var(--history-light);color:var(--history)}
   .date-status-badge::before{content:'●';font-size:7px}
+  .memo-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:7px;
+  }
   .memo-text{
     display:flex;
     align-items:flex-start;
@@ -848,7 +857,6 @@ function render(){
       <td>
         <div class="date-cell">
           ${activePerson === 'all' ? `<span class="person-chip"><span class="person-avatar">${escapeHtml(row.person.charAt(0).toUpperCase())}</span>${escapeHtml(row.person)}</span>` : ''}
-          ${info.status ? `<span class="date-status-badge ${info.className}">${escapeHtml(info.status)}</span>` : ''}
           <div class="date-value ${info.className}">
             ${escapeHtml(row.dateText || '—')}${row.date ? `<span class="weekday">(${escapeHtml(getWeekdayLabel(row))})</span>` : ''}
           </div>
@@ -858,9 +866,12 @@ function render(){
         <div class="task-text" title="${escapeHtml(row.task)}">${escapeHtml(row.task)}</div>
       </td>
       <td>
-        ${row.memo
-          ? `<div class="memo-text"><span class="memo-icon">💬</span><span class="memo-value" title="${escapeHtml(row.memo)}">${escapeHtml(row.memo)}</span></div>`
-          : '—'}
+        <div class="memo-cell">
+          ${info.status ? `<span class="date-status-badge ${info.className}">${escapeHtml(info.status)}</span>` : ''}
+          ${row.memo
+            ? `<div class="memo-text"><span class="memo-icon">💬</span><span class="memo-value" title="${escapeHtml(row.memo)}">${escapeHtml(row.memo)}</span></div>`
+            : (info.status ? '' : '—')}
+        </div>
       </td>
     </tr>
   `;
