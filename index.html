@@ -335,7 +335,9 @@
   .date-cell{
     display:flex;
     flex-direction:column;
-    gap:8px;
+    align-items:flex-start;
+    text-align:left;
+    gap:7px;
   }
   .date-value{
     font-weight:800;
@@ -401,7 +403,6 @@
     background:var(--primary-light);
     border-radius:999px;
     padding:3px 9px 3px 3px;
-    margin-bottom:6px;
   }
   .person-avatar{
     width:16px;height:16px;
@@ -845,12 +846,12 @@ function render(){
     return `
     <tr class="${rowClass}">
       <td>
-        ${activePerson === 'all' ? `<span class="person-chip"><span class="person-avatar">${escapeHtml(row.person.charAt(0).toUpperCase())}</span>${escapeHtml(row.person)}</span>` : ''}
         <div class="date-cell">
+          ${activePerson === 'all' ? `<span class="person-chip"><span class="person-avatar">${escapeHtml(row.person.charAt(0).toUpperCase())}</span>${escapeHtml(row.person)}</span>` : ''}
+          ${info.status ? `<span class="date-status-badge ${info.className}">${escapeHtml(info.status)}</span>` : ''}
           <div class="date-value ${info.className}">
             ${escapeHtml(row.dateText || '—')}${row.date ? `<span class="weekday">(${escapeHtml(getWeekdayLabel(row))})</span>` : ''}
           </div>
-          ${info.status ? `<span class="date-status-badge ${info.className}">${escapeHtml(info.status)}</span>` : ''}
         </div>
       </td>
       <td>
