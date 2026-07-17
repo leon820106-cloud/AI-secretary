@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIM 工作事項管理 Dashboard</title>
+<style>
+  :root{
+    --bg:#f6f5f3;
+    --surface:#ffffff;
+    --border:#e6e0da;
+    --text:#20272a;
+    --muted:#7c847f;
+    --primary:#2da195;
+    --primary-dark:#1f7a70;
+    --primary-light:#e3f3f1;
+    --accent:#a3907c;
+    --warn:#b8860b;
+    --danger:#c4534d;
+    --history:#54697c;
+    --history-light:#e7ecf1;
+    --shadow:0 8px 24px rgba(30,55,50,.08);
+    --shadow-hover:0 10px 28px rgba(30,55,50,.13);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 420px at 100% -8%, rgba(45,161,149,.10), transparent 60%),
+      radial-gradient(900px 380px at -5% 0%, rgba(163,144,124,.10), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:rgba(255,255,255,.9);
+    backdrop-filter:saturate(180%) blur(10px);
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+  }
+  .header-inner{
+    max-width:1280px;
+    height:68px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:40px;height:40px;border-radius:11px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;font-weight:700;
+    font-size:13px;letter-spacing:.3px;
+    box-shadow:0 4px 10px rgba(45,161,149,.3);
+  }
+  h1{font-size:19px;margin:0;letter-spacing:.2px}
+  .brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .sync-area{display:flex;align-items:center;gap:10px}
+  #syncStatus{font-size:12px;color:var(--muted);white-space:nowrap}
+  button{
+    font:inherit;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    padding:8px 13px;
+    cursor:pointer;
+    transition:.15s ease;
+  }
+  button:hover{background:var(--primary-light);border-color:#9dcbc2;transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  #refreshBtn{font-weight:600;color:var(--primary)}
+  .sheet-link{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--primary);
+    text-decoration:none;
+    border:1px solid #9dcbc2;
+    background:var(--primary-light);
+    border-radius:10px;
+    padding:8px 13px;
+    white-space:nowrap;
+    transition:.15s ease;
+  }
+  .sheet-link:hover{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+    transform:translateY(-1px);
+    box-shadow:0 4px 10px rgba(45,161,149,.25);
+  }
+  main{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px;
+  }
+  .toolbar{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:20px;
+  }
+  .toolbar-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    margin:0 0 9px;
+    letter-spacing:.3px;
+  }
+  .tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    border:1px solid var(--border);
+    background:#fff;
+    padding:8px 16px;
+    border-radius:999px;
+    color:var(--muted);
+    font-weight:600;
+    font-size:13.5px;
+    transition:.15s ease;
+  }
+  .tab:hover{border-color:#9dcbc2;color:var(--primary);transform:translateY(-1px)}
+  .tab.active{
+    color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    border-color:var(--primary);
+    box-shadow:0 4px 10px rgba(45,161,149,.25);
+  }
+  .search-row{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    position:relative;
+  }
+  .search-row::before{
+    content:'🔍';
+    position:absolute;
+    left:13px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:14px;
+    opacity:.55;
+    pointer-events:none;
+  }
+  .search-row input{padding-left:36px}
+  .date-filter-wrap{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px dashed var(--border);
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .date-filter-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .date-filter-label{
+    font-size:13px;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .date-filter-buttons{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .date-filter{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--muted);
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:600;
+    font-size:13px;
+    transition:.15s;
+  }
+  .date-filter:hover{border-color:#9dcbc2;transform:translateY(-1px)}
+  .date-filter span{
+    display:inline-block;
+    margin-left:5px;
+    min-width:22px;
+    padding:1px 6px;
+    border-radius:999px;
+    background:#eef2f6;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+  }
+  .date-filter.active{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    border-color:var(--primary);
+    color:#fff;
+    box-shadow:0 4px 10px rgba(45,161,149,.22);
+  }
+  .date-filter.active span{
+    background:rgba(255,255,255,.22);
+    color:#fff;
+  }
+  .date-filter.history:not(.active){
+    color:var(--accent);
+    border-color:#e4d9cc;
+    background:#faf7f3;
+  }
+  .date-filter.history.active{
+    background:linear-gradient(135deg,var(--accent),#8a7863);
+    border-color:var(--accent);
+    box-shadow:0 4px 10px rgba(163,144,124,.28);
+  }
+  input,select{
+    width:100%;
+    font:inherit;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fbfcfe;
+    transition:.15s ease;
+  }
+  input:focus,select:focus{
+    outline:none;
+    border-color:var(--primary);
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(45,161,149,.12);
+  }
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .summary-card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px 18px 18px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    overflow:hidden;
+    transition:.15s ease;
+  }
+  .summary-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+  .summary-card::before{
+    content:'';
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:4px;
+    background:var(--card-accent, var(--primary));
+  }
+  .summary-icon{
+    flex:0 0 auto;
+    width:42px;height:42px;
+    border-radius:12px;
+    display:grid;place-items:center;
+    font-size:19px;
+    background:var(--card-accent-light, var(--primary-light));
+  }
+  .summary-label{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  .summary-value{font-size:26px;font-weight:800;letter-spacing:.2px}
+  .section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:24px 0 10px;
+  }
+  .section-title h2{font-size:17px;margin:0;display:flex;align-items:center;gap:8px}
+  .section-title h2::before{
+    content:'';
+    width:5px;height:16px;border-radius:3px;
+    background:linear-gradient(180deg,var(--primary),var(--accent));
+    display:inline-block;
+  }
+  .count{
+    font-size:12.5px;
+    color:var(--primary);
+    background:var(--primary-light);
+    font-weight:700;
+    padding:4px 11px;
+    border-radius:999px;
+  }
+  .table-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+  }
+  th{
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    text-align:left;
+    font-size:12.5px;
+    letter-spacing:.3px;
+    padding:13px 14px;
+  }
+  td{
+    border-bottom:1px solid var(--border);
+    padding:14px;
+    vertical-align:top;
+    font-size:14px;
+    line-height:1.7;
+    word-break:break-word;
+    white-space:pre-wrap;
+  }
+  tbody tr{transition:background .12s ease}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#f5f9fc}
+  tbody tr.row-overdue{background:var(--history-light)}
+  tbody tr.row-overdue:hover{background:#dde4ea}
+  tbody tr.row-today{background:#fffaf2}
+  tbody tr.row-today:hover{background:#fff4e2}
+  tbody tr.row-soon{background:#fffdf3}
+  tbody tr.row-soon:hover{background:#fff9df}
+  .date-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-weight:700;
+    font-size:13px;
+    border-radius:999px;
+    padding:4px 10px;
+    background:#eef3f7;
+    color:#526173;
+  }
+  .date-badge.today{
+    background:#fff0d8;
+    color:#a35a00;
+  }
+  .date-badge.soon{
+    background:#fff8d9;
+    color:#806600;
+  }
+  .date-badge.overdue{
+    background:var(--history-light);
+    color:var(--history);
+  }
+  .date-status{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    margin-top:7px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .date-status.today{color:#a35a00}
+  .date-status.soon{color:#806600}
+  .date-status.overdue{color:var(--history)}
+  .date-status::before{content:'●';font-size:8px}
+  .memo-text{
+    display:flex;
+    align-items:flex-start;
+    gap:7px;
+  }
+  .memo-icon{
+    flex:0 0 auto;
+    margin-top:2px;
+    opacity:.75;
+  }
+  .task-text,.memo-value{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:4;
+    overflow:hidden;
+    cursor:help;
+  }
+  th:nth-child(1),td:nth-child(1){width:180px}
+  th:nth-child(3),td:nth-child(3){width:30%}
+  .person-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:11px;
+    font-weight:700;
+    color:var(--primary);
+    background:var(--primary-light);
+    border-radius:999px;
+    padding:3px 9px 3px 3px;
+    margin-bottom:6px;
+  }
+  .person-avatar{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--primary),var(--accent));
+    color:#fff;
+    display:grid;place-items:center;
+    font-size:9px;
+    font-weight:800;
+  }
+  .empty,.loading,.error{
+    text-align:center;
+    padding:56px 20px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .empty::before{content:'📭';display:block;font-size:26px;margin-bottom:10px}
+  .loading::before{content:'⏳';display:block;font-size:26px;margin-bottom:10px}
+  .error{color:var(--danger)}
+  .error::before{content:'⚠️';display:block;font-size:26px;margin-bottom:10px}
+  .footer-note{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.8;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 16px;
+  }
+  @media(max-width:700px){
+    header{padding:0 14px}
+    main{padding:14px}
+    h1{font-size:16px}
+    #syncStatus{display:none}
+    .sheet-link{font-size:0;padding:8px 10px}
+    .sheet-link::after{content:'試算表';font-size:12px}
+    .summary{grid-template-columns:1fr}
+    .search-row{grid-template-columns:1fr}
+    .date-filter-wrap{align-items:flex-start;flex-direction:column}
+    .table-wrap{overflow-x:auto}
+    table{min-width:760px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">FIM</div>
+      <div>
+        <h1>個人工作目標管理</h1>
+        <div class="brand-sub">團隊工作事項總覽</div>
+      </div>
+    </div>
+    <div class="sync-area">
+      <span id="syncStatus">尚未同步</span>
+      <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1HQgH6B-Vj-OUk3oNnVBgQsbNKdTdlv8Diw5D09p7Dds/edit?usp=sharing" target="_blank" rel="noopener noreferrer">▦ 開啟 Google Sheet</a>
+      <button id="refreshBtn" onclick="loadAllSheets()">↻ 重新整理</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="toolbar">
+    <p class="toolbar-label">依同事篩選</p>
+    <div class="tabs" id="tabs"></div>
+    <div class="search-row">
+      <input id="keyword" type="search" placeholder="搜尋工作項目或 Memo…" oninput="render()">
+    </div>
+    <div class="date-filter-wrap" style="flex-direction:column;align-items:stretch;gap:13px;">
+      <div class="date-filter-row">
+        <span class="date-filter-label">月份篩選</span>
+        <div class="date-filter-buttons" id="monthFilterButtons">
+          <button class="date-filter month-filter active" data-month="all" onclick="setMonthFilter('all')">全部</button>
+          <button class="date-filter month-filter" data-month="1" onclick="setMonthFilter('1')">1月</button>
+          <button class="date-filter month-filter" data-month="2" onclick="setMonthFilter('2')">2月</button>
+          <button class="date-filter month-filter" data-month="3" onclick="setMonthFilter('3')">3月</button>
+          <button class="date-filter month-filter" data-month="4" onclick="setMonthFilter('4')">4月</button>
+          <button class="date-filter month-filter" data-month="5" onclick="setMonthFilter('5')">5月</button>
+          <button class="date-filter month-filter" data-month="6" onclick="setMonthFilter('6')">6月</button>
+          <button class="date-filter month-filter" data-month="7" onclick="setMonthFilter('7')">7月</button>
+          <button class="date-filter month-filter" data-month="8" onclick="setMonthFilter('8')">8月</button>
+          <button class="date-filter month-filter" data-month="9" onclick="setMonthFilter('9')">9月</button>
+          <button class="date-filter month-filter" data-month="10" onclick="setMonthFilter('10')">10月</button>
+          <button class="date-filter month-filter" data-month="11" onclick="setMonthFilter('11')">11月</button>
+          <button class="date-filter month-filter" data-month="12" onclick="setMonthFilter('12')">12月</button>
+        </div>
+      </div>
+      <div class="date-filter-row">
+        <span class="date-filter-label">日期篩選</span>
+        <div class="date-filter-buttons" id="dateFilterButtons">
+          <button class="date-filter active" data-mode="all" onclick="setDateFilter('all')">全部 <span id="count-all">0</span></button>
+          <button class="date-filter" data-mode="today" onclick="setDateFilter('today')">今日 <span id="count-today">0</span></button>
+          <button class="date-filter" data-mode="tomorrow" onclick="setDateFilter('tomorrow')">明日 <span id="count-tomorrow">0</span></button>
+          <button class="date-filter" data-mode="3days" onclick="setDateFilter('3days')">3日內 <span id="count-3days">0</span></button>
+          <button class="date-filter" data-mode="7days" onclick="setDateFilter('7days')">7日內 <span id="count-7days">0</span></button>
+          <button class="date-filter history" data-mode="past" onclick="setDateFilter('past')">歷史紀錄 <span id="count-past">0</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary">
+    <div class="summary-card" style="--card-accent:#2da195;--card-accent-light:#e3f3f1">
+      <div class="summary-icon">👥</div>
+      <div>
+        <div class="summary-label">目前檢視人員</div>
+        <div class="summary-value" id="personTotal">—</div>
+      </div>
+    </div>
+    <div class="summary-card" style="--card-accent:#a3907c;--card-accent-light:#f2ece6">
+      <div class="summary-icon">📋</div>
+      <div>
+        <div class="summary-label">工作項目筆數</div>
+        <div class="summary-value" id="itemTotal">—</div>
+      </div>
+    </div>
+    <div class="summary-card" style="--card-accent:#7f8b88;--card-accent-light:#eef1f0">
+      <div class="summary-icon">🗓️</div>
+      <div>
+        <div class="summary-label">未來待辦項目</div>
+        <div class="summary-value" id="futureTotal">—</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-title">
+    <h2 id="sectionTitle">全部同事工作項目</h2>
+    <span class="count" id="tableCount">—</span>
+  </div>
+
+  <section class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>應辦日期</th>
+          <th>工作項目</th>
+          <th>Memo</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="3" class="loading">資料讀取中…</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footer-note">
+    資料來源為 Google Sheet 各同事分頁，僅顯示「應辦日期」、「工作項目」及「Memo」。<br>
+    今天到期顯示橘色、7 日內顯示黃色、歷史項目顯示灰藍色。滑鼠移到較長文字上可查看完整內容。
+  </div>
+</main>
+
+<script>
+const SPREADSHEET_ID = '1HQgH6B-Vj-OUk3oNnVBgQsbNKdTdlv8Diw5D09p7Dds';
+
+/* 同事分頁名稱。新增或移除同事時，修改這裡即可。 */
+const SHEET_NAMES = [
+  'CFO',
+  'Ariel',
+  'May',
+  'Leon',
+  'Yuchin',
+  'Ellen',
+  'Tracy',
+  'Enrou',
+  'Sharon'
+];
+
+let allRows = [];
+let activePerson = 'all';
+let activeDateFilter = 'all';
+let activeMonthFilter = 'all';
+
+function csvUrl(sheetName){
+  return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+}
+
+async function loadAllSheets(){
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '讀取中…';
+  document.getElementById('tableBody').innerHTML =
+    '<tr><td colspan="3" class="loading">正在讀取各同事分頁…</td></tr>';
+
+  try{
+    const results = await Promise.allSettled(
+      SHEET_NAMES.map(async person => {
+        const response = await fetch(csvUrl(person), {cache:'no-store'});
+        if(!response.ok) throw new Error(`${person}: HTTP ${response.status}`);
+        const text = await response.text();
+        return parseSheetCSV(text, person);
+      })
+    );
+
+    allRows = [];
+    const failed = [];
+
+    results.forEach((result, index) => {
+      if(result.status === 'fulfilled'){
+        allRows.push(...result.value);
+      }else{
+        failed.push(SHEET_NAMES[index]);
+      }
+    });
+
+    buildTabs();
+    render();
+    document.getElementById('syncStatus').textContent =
+      '最後更新：' + new Date().toLocaleString('zh-TW', {hour12:false});
+
+    if(failed.length){
+      console.warn('以下分頁無法讀取：', failed);
+    }
+  }catch(error){
+    document.getElementById('tableBody').innerHTML =
+      `<tr><td colspan="3" class="error">無法讀取 Google Sheet：${escapeHtml(error.message)}</td></tr>`;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '↻ 重新整理';
+  }
+}
+
+function parseSheetCSV(text, person){
+  const matrix = parseCSV(text);
+  if(matrix.length < 2) return [];
+
+  const headers = matrix[0].map(v => normalize(v));
+  const dateIndex = findHeader(headers, ['應辦日期','日期']);
+  const taskIndex = findHeader(headers, ['工作項目','工作內容','項目']);
+  const memoIndex = findHeader(headers, ['memo','備註']);
+
+  if(dateIndex < 0 || taskIndex < 0) return [];
+
+  return matrix.slice(1)
+    .map(row => ({
+      person,
+      dateText: cleanCell(row[dateIndex]),
+      task: cleanCell(row[taskIndex]),
+      memo: memoIndex >= 0 ? cleanCell(row[memoIndex]) : '',
+      date: parseDate(cleanCell(row[dateIndex]))
+    }))
+    .filter(row => row.dateText || row.task || row.memo)
+    .filter(row => row.task);
+}
+
+function findHeader(headers, candidates){
+  return headers.findIndex(h => candidates.some(c => h === normalize(c)));
+}
+
+function normalize(value){
+  return String(value || '').trim().toLowerCase().replace(/\s+/g,'');
+}
+
+function cleanCell(value){
+  return String(value ?? '').trim();
+}
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], cell = '', quoted = false;
+
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    const next = text[i+1];
+
+    if(ch === '"'){
+      if(quoted && next === '"'){
+        cell += '"';
+        i++;
+      }else{
+        quoted = !quoted;
+      }
+    }else if(ch === ',' && !quoted){
+      row.push(cell);
+      cell = '';
+    }else if((ch === '\n' || ch === '\r') && !quoted){
+      if(ch === '\r' && next === '\n') i++;
+      row.push(cell);
+      if(row.some(v => v !== '')) rows.push(row);
+      row = [];
+      cell = '';
+    }else{
+      cell += ch;
+    }
+  }
+
+  row.push(cell);
+  if(row.some(v => v !== '')) rows.push(row);
+  return rows;
+}
+
+function parseDate(value){
+  if(!value) return null;
+  const match = value.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(!match) return null;
+  const date = new Date(+match[1], +match[2]-1, +match[3]);
+  date.setHours(0,0,0,0);
+  return isNaN(date) ? null : date;
+}
+
+function buildTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+
+  const names = ['all', ...SHEET_NAMES];
+  names.forEach(name => {
+    const button = document.createElement('button');
+    button.className = 'tab' + (name === activePerson ? ' active' : '');
+    button.textContent = name === 'all' ? '全部' : name;
+    button.onclick = () => {
+      activePerson = name;
+      buildTabs();
+      render();
+    };
+    tabs.appendChild(button);
+  });
+}
+
+function getFilteredRows(){
+  const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+  const dateMode = activeDateFilter;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  return allRows.filter(row => {
+    if(activePerson !== 'all' && row.person !== activePerson) return false;
+
+    if(keyword){
+      const haystack = `${row.person} ${row.task} ${row.memo}`.toLowerCase();
+      if(!haystack.includes(keyword)) return false;
+    }
+
+    if(activeMonthFilter !== 'all'){
+      if(!row.date || (row.date.getMonth() + 1) !== Number(activeMonthFilter)) return false;
+    }
+
+    if(dateMode !== 'all'){
+      if(!row.date) return false;
+      const diff = Math.round((row.date - today) / 86400000);
+      if(dateMode === 'today' && diff !== 0) return false;
+      if(dateMode === 'tomorrow' && diff !== 1) return false;
+      if(dateMode === '3days' && (diff < 0 || diff > 3)) return false;
+      if(dateMode === '7days' && (diff < 0 || diff > 7)) return false;
+      if(dateMode === 'past' && diff >= 0) return false;
+    }
+
+    return true;
+  });
+}
+
+function setMonthFilter(month){
+  activeMonthFilter = month;
+  document.querySelectorAll('.month-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.month === String(month));
+  });
+  render();
+}
+
+function setDateFilter(mode){
+  activeDateFilter = mode;
+  document.querySelectorAll('#dateFilterButtons .date-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  render();
+}
+
+function updateDateFilterCounts(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const baseRows = allRows.filter(row => {
+    if(activePerson !== 'all' && row.person !== activePerson) return false;
+    const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+    if(keyword){
+      const haystack = `${row.person} ${row.task} ${row.memo}`.toLowerCase();
+      if(!haystack.includes(keyword)) return false;
+    }
+    if(activeMonthFilter !== 'all'){
+      if(!row.date || (row.date.getMonth() + 1) !== Number(activeMonthFilter)) return false;
+    }
+    return true;
+  });
+
+  const counts = {
+    all: baseRows.length,
+    today: 0,
+    tomorrow: 0,
+    '3days': 0,
+    '7days': 0,
+    past: 0
+  };
+
+  baseRows.forEach(row => {
+    if(!row.date) return;
+    const diff = Math.round((row.date - today) / 86400000);
+    if(diff === 0) counts.today++;
+    if(diff === 1) counts.tomorrow++;
+    if(diff >= 0 && diff <= 3) counts['3days']++;
+    if(diff >= 0 && diff <= 7) counts['7days']++;
+    if(diff < 0) counts.past++;
+  });
+
+  Object.entries(counts).forEach(([key, value]) => {
+    const el = document.getElementById(`count-${key}`);
+    if(el) el.textContent = value;
+  });
+}
+
+function formatDateWithWeekday(row){
+  if(!row.date) return row.dateText || '—';
+  const weekdays = ['日','一','二','三','四','五','六'];
+  return `${row.dateText}（${weekdays[row.date.getDay()]}）`;
+}
+
+function getDateInfo(row){
+  if(!row.date) return {className:'', status:''};
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const diff = Math.round((row.date - today) / 86400000);
+
+  if(diff < 0){
+    return {
+      className:'overdue',
+      status:`歷史項目・${Math.abs(diff)} 日前`
+    };
+  }
+  if(diff === 0){
+    return {
+      className:'today',
+      status:'今天到期'
+    };
+  }
+  if(diff <= 7){
+    return {
+      className:'soon',
+      status:`${diff} 日內到期`
+    };
+  }
+  return {className:'', status:''};
+}
+
+function render(){
+  updateDateFilterCounts();
+  const rows = getFilteredRows();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  rows.sort((a,b) => {
+    if(a.date && b.date) return a.date - b.date || a.person.localeCompare(b.person);
+    if(a.date) return -1;
+    if(b.date) return 1;
+    return a.person.localeCompare(b.person);
+  });
+
+  const people = new Set(rows.map(r => r.person));
+  const future = rows.filter(r => r.date && r.date >= today).length;
+
+  document.getElementById('personTotal').textContent = people.size;
+  document.getElementById('itemTotal').textContent = rows.length;
+  document.getElementById('futureTotal').textContent = future;
+  document.getElementById('tableCount').textContent = `${rows.length} 筆`;
+  document.getElementById('sectionTitle').textContent =
+    activePerson === 'all' ? '全部同事工作項目' : `${activePerson} 的工作項目`;
+
+  const tbody = document.getElementById('tableBody');
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">目前沒有符合條件的工作項目</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => {
+    const info = getDateInfo(row);
+    const rowClass = info.className ? `row-${info.className}` : '';
+    return `
+    <tr class="${rowClass}">
+      <td>
+        ${activePerson === 'all' ? `<span class="person-chip"><span class="person-avatar">${escapeHtml(row.person.charAt(0).toUpperCase())}</span>${escapeHtml(row.person)}</span><br>` : ''}
+        <span class="date-badge ${info.className}">
+          ${escapeHtml(formatDateWithWeekday(row))}
+        </span>
+        ${info.status ? `<span class="date-status ${info.className}">${escapeHtml(info.status)}</span>` : ''}
+      </td>
+      <td>
+        <div class="task-text" title="${escapeHtml(row.task)}">${escapeHtml(row.task)}</div>
+      </td>
+      <td>
+        ${row.memo
+          ? `<div class="memo-text"><span class="memo-icon">💬</span><span class="memo-value" title="${escapeHtml(row.memo)}">${escapeHtml(row.memo)}</span></div>`
+          : '—'}
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+buildTabs();
+loadAllSheets();
+
+/* 每五分鐘自動重新讀取 */
+setInterval(loadAllSheets, 5 * 60 * 1000);
+</script>
+</body>
+</html>
