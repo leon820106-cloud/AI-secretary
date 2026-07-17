@@ -344,13 +344,13 @@
     width:fit-content;
     text-align:left;
     font-weight:800;
-    font-size:14.5px;
+    font-size:16px;
     color:var(--text);
     line-height:1.4;
   }
   .date-value .weekday{
     font-weight:600;
-    font-size:12.5px;
+    font-size:13.5px;
     color:var(--muted);
     margin-left:3px;
   }
@@ -399,6 +399,10 @@
     -webkit-line-clamp:4;
     overflow:hidden;
     cursor:help;
+  }
+  .task-text{
+    font-size:15.5px;
+    font-weight:600;
   }
   th:nth-child(1),td:nth-child(1){width:180px}
   th:nth-child(3),td:nth-child(3){width:30%}
@@ -485,12 +489,12 @@
     <div class="date-filter-wrap">
       <span class="date-filter-label">日期篩選</span>
       <div class="date-filter-buttons" id="dateFilterButtons">
-        <button class="date-filter active" data-mode="all" onclick="setDateFilter('all')">全部 <span id="count-all">0</span></button>
         <button class="date-filter" data-mode="today" onclick="setDateFilter('today')">今日 <span id="count-today">0</span></button>
         <button class="date-filter" data-mode="tomorrow" onclick="setDateFilter('tomorrow')">明日 <span id="count-tomorrow">0</span></button>
         <button class="date-filter" data-mode="3days" onclick="setDateFilter('3days')">3日內 <span id="count-3days">0</span></button>
         <button class="date-filter" data-mode="7days" onclick="setDateFilter('7days')">7日內 <span id="count-7days">0</span></button>
         <button class="date-filter history" data-mode="past" onclick="setDateFilter('past')">歷史紀錄 <span id="count-past">0</span></button>
+        <button class="date-filter active" data-mode="all" onclick="setDateFilter('all')">全部 <span id="count-all">0</span></button>
       </div>
     </div>
   </section>
@@ -696,7 +700,7 @@ function buildTabs(){
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
 
-  const names = ['all', ...SHEET_NAMES];
+  const names = [...SHEET_NAMES, 'all'];
   names.forEach(name => {
     const button = document.createElement('button');
     button.className = 'tab' + (name === activePerson ? ' active' : '');
